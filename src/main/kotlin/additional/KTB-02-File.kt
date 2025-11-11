@@ -8,8 +8,9 @@ data class Word(
     val translate: String,
     var correctAnswersCount: Int = 0
 )
-fun main() {
-    val wordsFile: File = File("words.txt")
+
+fun loadDictionary(): List<Word> {
+    val wordsFile = File("words.txt")
     val dictionary = mutableListOf<Word>()
 
     try {
@@ -29,5 +30,23 @@ fun main() {
     } catch (e: IOException) {
         println("Ошибка при работе с файлом: ${e.message}")
         e.printStackTrace()
+    }
+    return dictionary
+}
+
+fun main() {
+    val dictionary = loadDictionary()
+
+    while (true) {
+        println("1")
+        println("2")
+        println("0")
+        val input = readlnOrNull()?.trim() ?: ""
+        when (input) {
+            "1" -> println("Учить слова")
+            "2" -> println("Статистика")
+            "0" -> break
+            else -> println("Введите число 1, 2 или 0")
+        }
     }
 }
