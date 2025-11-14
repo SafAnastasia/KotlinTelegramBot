@@ -44,7 +44,16 @@ fun main() {
         val input = readlnOrNull()?.trim() ?: ""
         when (input) {
             "1" -> println("Учить слова")
-            "2" -> println("Статистика")
+            "2" -> {
+                val totalCount = dictionary.size
+                val learnedWords = dictionary.filter { it.correctAnswersCount >= 3 }
+                val percent = if (totalCount > 0) {
+                    (learnedWords.size.toDouble() / totalCount * 100).toInt()
+                } else 0
+
+                println("Выучено $learnedWords из $totalCount слов | $percent%")
+            }
+
             "0" -> break
             else -> println("Введите число 1, 2 или 0")
         }
