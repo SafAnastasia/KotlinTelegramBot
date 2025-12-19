@@ -22,11 +22,10 @@ fun loadDictionary(): List<Word> {
         val lines: List<String> = wordsFile.readLines()
 
         for (line in lines) {
-            val line = line.split("|")
-            val word = Word(original = line[0], translate = line[1], correctAnswersCount = line[2].toInt())
+            val parts = line.split("|")
+            val word = Word(original = parts[0], translate = parts[1], correctAnswersCount = line[2].toInt())
             dictionary.add(word)
         }
-        println(dictionary)
     } catch (e: IOException) {
         println("Ошибка при работе с файлом: ${e.message}")
         e.printStackTrace()
@@ -51,7 +50,7 @@ fun main() {
                     (learnedWords.size.toDouble() / totalCount * 100).toInt()
                 } else 0
 
-                println("Выучено $learnedWords из $totalCount слов | $percent%")
+                println("Выучено ${learnedWords.size} из $totalCount слов | $percent%")
             }
 
             "0" -> break
