@@ -14,16 +14,24 @@ fun loadDictionary(): List<Word> {
     val dictionary = mutableListOf<Word>()
 
     try {
-        wordsFile.createNewFile()
-        wordsFile.writeText("hello|привет|0\n")
-        wordsFile.appendText("dog|собака|0\n")
-        wordsFile.appendText("cat|кошка|0\n")
+        if (!wordsFile.exists()) {
+            wordsFile.createNewFile()
+        }
+
+        if (wordsFile.readText().isBlank()) {
+            wordsFile.writeText("hello|привет|0\n")
+            wordsFile.appendText("dog|собака|0\n")
+            wordsFile.appendText("cat|кошка|0\n")
+        }
 
         val lines: List<String> = wordsFile.readLines()
 
         for (line in lines) {
+            if (line.isBlank()) continue
             val parts = line.split("|")
-            val word = Word(original = parts[0], translate = parts[1], correctAnswersCount = line[2].toInt())
+            if (parts.size < 3) continue
+
+            val word = Word(original = parts[0], translate = parts[1], correctAnswersCount = parts[2].toInt())
             dictionary.add(word)
         }
     } catch (e: IOException) {
@@ -37,12 +45,50 @@ fun main() {
     val dictionary = loadDictionary()
 
     while (true) {
-        println("1")
-        println("2")
-        println("0")
+        println("1 - Учить слова")
+        println("2 - Статистика")
+        println("0 - Выход")
+
         val input = readlnOrNull()?.trim() ?: ""
         when (input) {
-            "1" -> println("Учить слова")
+            "1" -> {
+                while (true) {
+                    val notLearnedList = dictionary.filter { it.correctAnswersCount < 3 }
+                    if (notLearnedList.isEmpty()) {
+                        println("Все слова выучены!")
+                        break
+                    }
+
+                    val questionWords = dictionary.shuffled().take(minOf(4, dictionary.size))
+                    val correctAnswer = questionWords.random()
+
+                    println("Как переводится слово: ${correctAnswer.original}.")
+                    questionWords.forEachIndexed { index, word ->
+                        println("${index + 1} - ${word.translate}")
+                    }
+                    println("0 - Выйти в меню")
+
+                    val answer = readlnOrNull()?.trim() ?: ""
+                    if (answer == "0") break
+
+                    val chosenIndex = answer.toIntOrNull()
+                    if (chosenIndex == null || chosenIndex !in 1..questionWords.size) {
+                        println("Введите число от 1 до ${questionWords.size} или 0")
+                        continue
+                    }
+
+                    val chosenWord = questionWords[chosenIndex - 1]
+                    if (chosenWord == correctAnswer) {
+                        correctAnswer.correctAnswersCount++
+                        println("Верно! (количество правильных ответов: ${correctAnswer.correctAnswersCount})")
+                    } else {
+                        println("Неверно. Правильный ответ: ${correctAnswer.translate}.")
+                    }
+
+                    println()
+                }
+            }
+
             "2" -> {
                 val totalCount = dictionary.size
                 val learnedWords = dictionary.filter { it.correctAnswersCount >= 3 }
