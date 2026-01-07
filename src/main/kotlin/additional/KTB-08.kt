@@ -110,7 +110,7 @@ fun main() {
             }
 
             "2" -> {
-                val totalCount = dictionary.size//
+                val totalCount = dictionary.size//всего слов
                 val learnedWords = dictionary.filter { it.correctAnswersCount >= 3 }//выученные слова
                 val percent = if (totalCount > 0) {//процент выученных слов
                     (learnedWords.size.toDouble() / totalCount * 100).toInt()
