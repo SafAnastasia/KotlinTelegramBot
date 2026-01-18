@@ -3,6 +3,12 @@ package org.example.additional
 import java.io.File
 import java.io.IOException
 
+
+const val SEPARATOR = "|"
+const val PART = 3
+const val ANSWER_OPTIONS = 4
+const val CORRECT_ANSWERS = 3
+
 data class Word(
     val original: String, //слово на английском
     val translate: String, // его перевод
@@ -28,8 +34,8 @@ fun loadDictionary(): List<Word> {   // функция для загрузки �
 
         for (line in lines) { // перебираем строки с проверкой на пустые строки и пробелы
             if (line.isBlank()) continue //пропускаем, если пусто
-            val parts = line.split("|")// делим строки на части функцией split()
-            if (parts.size < 3) continue //если количество частей меньше 3х, пропускаем
+            val parts = line.split(SEPARATOR)// делим строки на части функцией split()
+            if (parts.size < PART) continue //если количество частей меньше 3х, пропускаем
 
             val word = Word(original = parts[0], translate = parts[1], correctAnswersCount = parts[2].toInt())
             dictionary.add(word)//создан объект класса Word из "частей" строк, с преобразованием типа данных toInt()
@@ -58,6 +64,9 @@ fun saveDictionary(dictionary: List<Word>) {//сохраняем текущий 
 }
 
 fun main() {
+    val file = File("words.txt")
+    file.appendText("house|дом|0\n")
+
     val dictionary = loadDictionary() //загружаем словарь
 
     while (true) {//главное меню, работает бесконечно, пока не выберем 0.
@@ -69,13 +78,13 @@ fun main() {
         when (input) {// trim() - убирает пробелы по краям
             "1" -> {// Учить слова
                 while (true) {
-                    val notLearnedList = dictionary.filter { it.correctAnswersCount < 3 }//список с невыученными словами
+                    val notLearnedList = dictionary.filter { it.correctAnswersCount < CORRECT_ANSWERS }//список с невыученными словами
                     if (notLearnedList.isEmpty()) {//создается новый список .filter(), с правильными ответами <3
                         println("Все слова выучены!")//isEmpty() - проверка на пустоту, если пусто значит все выучено
                         break //выходим
                     }
 
-                    val questionWords = notLearnedList.shuffled().take(minOf(4, notLearnedList.size))
+                    val questionWords = notLearnedList.shuffled().take(minOf(ANSWER_OPTIONS, notLearnedList.size))
                     val correctAnswer =
                         questionWords.random()//варианты ответа (до 4х), перемешиваем список невыученных слов shuffled(),
                     //берем первые 4 элемента из списка или сколько есть, random()выбирает один случайный элемент
@@ -110,7 +119,7 @@ fun main() {
             }
 
             "2" -> {
-                val totalCount = dictionary.size//
+                val totalCount = dictionary.size//всего слов
                 val learnedWords = dictionary.filter { it.correctAnswersCount >= 3 }//выученные слова
                 val percent = if (totalCount > 0) {//процент выученных слов
                     (learnedWords.size.toDouble() / totalCount * 100).toInt()
