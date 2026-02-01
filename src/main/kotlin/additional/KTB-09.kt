@@ -22,7 +22,7 @@ fun main() {
 
 
     while (true) {
-        println("1 - Учить слова, 2 - Статистика, 0 - Выход")
+        println("Меню: 1 - Учить слова, 2 - Статистика, 3 - Выход")
         val input = readlnOrNull()?.trim() ?: ""
 
         when (input) {
