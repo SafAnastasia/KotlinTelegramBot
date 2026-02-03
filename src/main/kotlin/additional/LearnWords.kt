@@ -30,7 +30,17 @@ class LearnWordsTrainer {
         val notLearnedList = dictionary.filter { it.correctAnswersCount < CORRECT_ANSWERS }
         if (notLearnedList.isEmpty()) return null
 
-        val questionWords = notLearnedList.shuffled().take(minOf(ANSWER_OPTIONS, notLearnedList.size))
+        val questionWords = notLearnedList.shuffled()
+            .take(minOf(ANSWER_OPTIONS, notLearnedList.size))
+            .toMutableList()
+        if (questionWords.size < ANSWER_OPTIONS) {
+            val learnedList = dictionary.filter { it.correctAnswersCount >= CORRECT_ANSWERS }
+            val need = ANSWER_OPTIONS - questionWords.size
+
+            questionWords.addAll(
+                learnedList.shuffled().take(minOf(need, learnedList.size))
+            )
+        }
         val correctAnswer = questionWords.random()
 
         question = Question(

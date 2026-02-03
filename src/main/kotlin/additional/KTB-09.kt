@@ -18,11 +18,15 @@ fun Question.asConsoleString(): String {
 fun main() {
     val learning = LearnWordsTrainer()
     val file = File("words.txt")
-    file.appendText("house|дом|0\n")
-
+    if (!file.exists()) file.createNewFile()
+    val newLine = "house|дом|0"
+    val hasHouse = file.readLines().any { it.trim() == newLine }
+    if (!hasHouse) {
+        file.appendText("$newLine\n")
+    }
 
     while (true) {
-        println("Меню: 1 - Учить слова, 2 - Статистика, 3 - Выход")
+        println("Меню: 1 - Учить слова, 2 - Статистика, 0 - Выход")
         val input = readlnOrNull()?.trim() ?: ""
 
         when (input) {
