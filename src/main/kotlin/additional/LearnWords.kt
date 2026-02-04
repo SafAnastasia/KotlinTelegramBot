@@ -24,13 +24,23 @@ class LearnWordsTrainer {
     }
 
     private var question: Question? = null
-    private val dictionary = loadDictionary() //загружаем словарь
+    private val dictionary = loadDictionary()
 
     fun getNextQuestion(): Question? {
         val notLearnedList = dictionary.filter { it.correctAnswersCount < CORRECT_ANSWERS }
         if (notLearnedList.isEmpty()) return null
 
-        val questionWords = notLearnedList.shuffled().take(minOf(ANSWER_OPTIONS, notLearnedList.size))
+        val questionWords = notLearnedList.shuffled()
+            .take(minOf(ANSWER_OPTIONS, notLearnedList.size))
+            .toMutableList()
+        if (questionWords.size < ANSWER_OPTIONS) {
+            val learnedList = dictionary.filter { it.correctAnswersCount >= CORRECT_ANSWERS }
+            val need = ANSWER_OPTIONS - questionWords.size
+
+            questionWords.addAll(
+                learnedList.shuffled().take(minOf(need, learnedList.size))
+            )
+        }
         val correctAnswer = questionWords.random()
 
         question = Question(
@@ -43,7 +53,7 @@ class LearnWordsTrainer {
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
         return question?.let {
             val correctAnswerId = it.variants.indexOf(it.correctAnswer)
-            if (correctAnswerId == userAnswerIndex) {//сравниваем слово и правильный ответ
+            if (correctAnswerId == userAnswerIndex) {
                 it.correctAnswer.correctAnswersCount++
                 saveDictionary(dictionary)
                 true
@@ -55,46 +65,46 @@ class LearnWordsTrainer {
 
     fun getStatistics(): Statistics {
         val totalCount = dictionary.size//всего слов
-        val learnedWords = dictionary.filter { it.correctAnswersCount >= CORRECT_ANSWERS }//выученные слова
-        val percent = if (totalCount > 0) {//процент выученных слов
+        val learnedWords = dictionary.filter { it.correctAnswersCount >= CORRECT_ANSWERS }
+        val percent = if (totalCount > 0) {
             (learnedWords.size.toDouble() / totalCount * 100).toInt()
         } else 0
         return Statistics(totalCount, learnedWords, percent)
     }
 
-    private fun loadDictionary(): List<Word> {   // функция для загрузки словаря
-        val wordsFile = File("words.txt") //объект файла в формате txt
-        val dictionary = mutableListOf<Word>() //изменяемый список "словарь"
+    private fun loadDictionary(): List<Word> {
+        val wordsFile = File("words.txt")
+        val dictionary = mutableListOf<Word>()
 
         try {
-            if (!wordsFile.exists()) { //если файла нет создается пустой файл, функция exists() используется для проверки
-                wordsFile.createNewFile() // существования файла, функция createNewFile() создает новый файл, если его нет
+            if (!wordsFile.exists()) {
+                wordsFile.createNewFile()
             }
 
-            if (wordsFile.readText().isBlank()) { //readText() для чтения всего содержимого файла в виде строки
-                wordsFile.writeText("hello|привет|0\n") //isBlank() проверяет пустая ли строка или состоит из пробелов
-                wordsFile.appendText("dog|собака|0\n") //writeText() записывает текст в файле, полностью перезаписывает
-                wordsFile.appendText("cat|кошка|0\n") //файл, appendText() добавляет текс в конец файла.
+            if (wordsFile.readText().isBlank()) {
+                wordsFile.writeText("hello|привет|0\n")
+                wordsFile.appendText("dog|собака|0\n")
+                wordsFile.appendText("cat|кошка|0\n")
             }
 
-            val lines: List<String> = wordsFile.readLines() // readLines() читает файл и возвращает список строк
+            val lines: List<String> = wordsFile.readLines()
 
-            for (line in lines) { // перебираем строки с проверкой на пустые строки и пробелы
-                if (line.isBlank()) continue //пропускаем, если пусто
-                val parts = line.split(SEPARATOR)// делим строки на части функцией split()
-                if (parts.size < PART) continue //если количество частей меньше 3х, пропускаем
+            for (line in lines) {
+                if (line.isBlank()) continue
+                val parts = line.split(SEPARATOR)
+                if (parts.size < PART) continue
 
                 val word = Word(original = parts[0], translate = parts[1], correctAnswersCount = parts[2].toInt())
-                dictionary.add(word)//создан объект класса Word из "частей" строк, с преобразованием типа данных toInt()
-            }//добавляем в словарь
-        } catch (e: IOException) {//проверка на ошибку, если файл не записался выводим сообщение
+                dictionary.add(word)
+            }
+        } catch (e: IOException) {
             println("Ошибка при работе с файлом: ${e.message}")
             e.printStackTrace()
         }
-        return dictionary // возвращаем собранный словарь
+        return dictionary
     }
 
-    private fun saveDictionary(dictionary: List<Word>) {//сохраняем текущий словарь, перезаписывая)
+    private fun saveDictionary(dictionary: List<Word>) {
         val wordsFile = File(WORDS_FILE)
 
         try {
