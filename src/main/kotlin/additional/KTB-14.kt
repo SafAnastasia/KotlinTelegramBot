@@ -33,12 +33,21 @@ fun getUpdates(botToken: String, offset: Long): Long {
     val offsetUpdates = "https://api.telegram.org/bot$botToken/getUpdates?offset=$offset"
     val client: HttpClient = HttpClient.newBuilder().build()
     val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(offsetUpdates)).build()
-    val response: HttpResponse<String> = client.send(request,
-        HttpResponse.BodyHandlers.ofString())
+    val response: HttpResponse<String> =
+        client.send(request,HttpResponse.BodyHandlers.ofString())
     val responseBody: String = response.body()
-    println(responseBody)
-    val pattern = Regex(""""update_id":(\d+)""")
-    val match = pattern.find(responseBody)
-    val updateId = match?.groupValues?.get(1) ?: return offset
-    return updateId.toLong()
+
+    val updateIdPattern = Regex("""update_id:(\d+)""")
+    val updateMatch = updateIdPattern.find(responseBody)
+    val updateId = updateMatch?.groupValues?.get(1)?.toLong()?: offset
+
+    val textPattern = Regex("""text":"(.*?)""")
+    val textMatch = textPattern.find(responseBody)
+    val messageText = textMatch?.groupValues?.get(1)
+
+    if (messageText != null) {
+        println(messageText)
+    }
+
+    return updateId
 }
