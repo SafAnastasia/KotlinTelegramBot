@@ -1,6 +1,7 @@
 package org.example.additional
 
 import java.net.URI
+import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -25,7 +26,7 @@ class TelegramBotService (private val botToken: String) {
         val chatId = chatIdPattern.find(responseBody)
             ?.groupValues?.get(1)?.toLong()
 
-        val textPattern = Regex("""text":"(.*?)""")
+        val textPattern = Regex(""""text":"(.*?)"""")
         val textMatch = textPattern.find(responseBody)
         val messageText = textMatch?.groupValues?.get(1)
 
@@ -38,7 +39,8 @@ class TelegramBotService (private val botToken: String) {
     }
 
     fun sendMessage(chatId: Long, text: String) {
-        val url = "$baseUrl/sendMessage?chat_id=$chatId&text=$text"
+        val encodedText = URLEncoder.encode(text,"UTF-8")
+        val url = "$baseUrl/sendMessage?chat_id=$chatId$text=$encodedText"
         val request: HttpRequest = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .build()
