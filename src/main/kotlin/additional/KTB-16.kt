@@ -48,6 +48,30 @@ class TelegramBotService (private val botToken: String) {
             client.send(request, HttpResponse.BodyHandlers.ofString())
         println("Сообщение отправлено: ${response.body()}")
     }
+
+    fun sendMenu(chatId: Long) {
+        val url = "$baseUrl/sendMessage"
+        val requestBody = """ 
+            {
+            "chat_id": $chatId,
+            "text": "Основное меню",
+            "reply_markup": {
+            "inline_keyboard": [
+            [{"text": "Учить слова", "callback_data": "learn_words"}],
+            [{"text": "Статистика", "callback_data": "statistics"}],
+        """.trimIndent()
+
+        val request: HttpRequest = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+            .build()
+
+        val response: HttpResponse<String> =
+            client.send(request, HttpResponse.BodyHandlers.ofString())
+        println("Меню отправлено: ${response.body()}")
+    }
+
 }
 
 fun main(args: Array<String>) {
@@ -55,6 +79,7 @@ fun main(args: Array<String>) {
     val botToken = args[0]
     val telegramBotService = TelegramBotService(botToken)
 
+    val trainer = LearnWordsTrainer()
     var offset: Long = 0L
 
     while (true) {
