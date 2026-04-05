@@ -6,7 +6,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class TelegramBotService (private val botToken: String) {
+class TelegramBotService(private val botToken: String) {
     private val baseUrl = "https://api.telegram.org/bot$botToken"
     private val client: HttpClient = HttpClient.newBuilder().build()
 
@@ -39,7 +39,7 @@ class TelegramBotService (private val botToken: String) {
     }
 
     fun sendMessage(chatId: Long, text: String) {
-        val encodedText = URLEncoder.encode(text,"UTF-8")
+        val encodedText = URLEncoder.encode(text, "UTF-8")
         val url = "$baseUrl/sendMessage?chat_id=$chatId$text=$encodedText"
         val request: HttpRequest = HttpRequest.newBuilder()
             .uri(URI.create(url))
