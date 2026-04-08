@@ -10,7 +10,7 @@ class TelegramBotService(private val botToken: String) {
     private val baseUrl = "https://api.telegram.org/bot$botToken"
     private val client: HttpClient = HttpClient.newBuilder().build()
 
-    fun getUpdates(offset: Long): Long {
+    fun getUpdates(offset: Long, trainer: LearnWordsTrainer): Long {
         val url = "$baseUrl/getUpdates?offset=$offset"
         val request: HttpRequest = HttpRequest.newBuilder()
             .uri(URI.create(url))
@@ -30,11 +30,37 @@ class TelegramBotService(private val botToken: String) {
         val textMatch = textPattern.find(responseBody)
         val messageText = textMatch?.groupValues?.get(1)
 
+        val callbackDataPattern = Regex("""callback_query":\{.*data":"(.*?)""")
+        val callbackData = callbackDataPattern.find(responseBody)
+            ?.groupValues?.get(1)
+
+        val callbackChatIdPattern = Regex(""""callback_guery":\{.*?"from":\{"id":(\d+)""")
+        val callbackChatId = callbackChatIdPattern.find(responseBody)
+        ?.groupValues?.get(1)?.toLong()
+
+        println("message: $messageText | callback: $callbackData | chatId: ${chatId ?: callbackChatId}")
+
         println("Получить сообщение: $messageText от chatId: $chatId")
-        if (messageText == "Hello" && chatId != null) {
-            sendMessage(chatId, "Hello")
+
+        if (chatId != null){
+            when (messageText) {
+                "/start" -> sendMenu(chatId)
+                "Hello" -> sendMessage(chatId, "Hello")
+            }
         }
 
+        if (callbackChatId != null) {
+            when (callbackData) {
+                "learn_words" -> sendMessage(callbackChatId, "Начинаем учить слова")
+                "statistics" -> {
+                    val statistics = trainer.getStatistics()
+                    sendMessage(
+                        callbackChatId,
+                        "Выучено ${statistics.learnedWords.size} из ${statistics.totalCount} слов | ${statistics.percent}%"
+                    )
+                }
+            }
+        }
         return updateId
     }
 
@@ -56,9 +82,12 @@ class TelegramBotService(private val botToken: String) {
             "chat_id": $chatId,
             "text": "Основное меню",
             "reply_markup": {
-            "inline_keyboard": [
-            [{"text": "Учить слова", "callback_data": "learn_words"}],
-            [{"text": "Статистика", "callback_data": "statistics"}],
+                "inline_keyboard": [
+                    [{"text": "Учить слова", "callback_data": "learn_words"}],
+                    [{"text": "Статистика", "callback_data": "statistics"}]
+                    ]
+                }
+            }
         """.trimIndent()
 
         val request: HttpRequest = HttpRequest.newBuilder()
@@ -84,7 +113,7 @@ fun main(args: Array<String>) {
 
     while (true) {
         Thread.sleep(2000)
-        val lastUpdateId = telegramBotService.getUpdates(offset)
+        val lastUpdateId = telegramBotService.getUpdates(offset, trainer)
         offset = lastUpdateId + 1
     }
 }
