@@ -3,6 +3,12 @@ package org.example.additional
 import java.io.File
 import java.io.IOException
 
+data class Word(
+    val original: String,
+    val translate: String,
+    var correctAnswersCount: Int = 0
+)
+
 data class Question(
     val variants: List<Word>,
     val correctAnswer: Word
@@ -13,6 +19,13 @@ data class Statistics(
     val learnedWords: List<Word>,
     val percent: Int,
 )
+
+fun Question.asConsoleString(): String {
+    val variants = this.variants
+        .mapIndexed { index: Int, word -> "${index + 1} - ${word.translate}" }
+        .joinToString(separator = "\n")
+    return "${this.correctAnswer.original}\n$variants\n0 - выйти в меню"
+}
 
 class LearnWordsTrainer {
     companion object {

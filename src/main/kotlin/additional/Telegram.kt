@@ -2,19 +2,6 @@ package org.example.additional
 
 import java.io.File
 
-data class Word(
-    val original: String,
-    val translate: String,
-    var correctAnswersCount: Int = 0
-)
-
-fun Question.asConsoleString(): String {
-    val variants = this.variants
-        .mapIndexed { index: Int, word -> "${index + 1} - ${word.translate}" }
-        .joinToString(separator = "\n")
-    return "${this.correctAnswer.original}\n$variants\n0 - выйти в меню"
-}
-
 fun main() {
     val learning = LearnWordsTrainer()
     val file = File("words.txt")
