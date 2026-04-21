@@ -82,8 +82,8 @@ class TelegramBotService(private val botToken: String) {
                 "text": "Основное меню",
                 "reply_markup": {
                     "inline_keyboard": [
-                        [{"text": "Учить слова 📚", "callback_data": "learn_words"}],
-                        [{"text": "Статистика 📊", "callback_data": "statistics"}]
+                        [{"text": "Учить слова", "callback_data": "learn_words"}],
+                        [{"text": "Статистика", "callback_data": "statistics"}]
                     ]
                 }
             }

@@ -1,59 +1,20 @@
 package org.example.additional
 
-import java.io.File
-
-fun main() {
-    val learning = LearnWordsTrainer()
-    val file = File("words.txt")
-    if (!file.exists()) file.createNewFile()
-    val newLine = "house|дом|0"
-    val hasHouse = file.readLines().any { it.trim() == newLine }
-    if (!hasHouse) {
-        file.appendText("$newLine\n")
+fun main(args: Array<String>) {
+    if (args.isEmpty()) {
+        println("Ошибка: передайте токен бота как аргумент!")
+        return
     }
 
+    val botToken = args[0]
+    val telegramBotService = TelegramBotService(botToken)
+    val trainer = LearnWordsTrainer()
+
+    var offset: Long = 0L
+
     while (true) {
-        println("Меню: 1 - Учить слова, 2 - Статистика, 0 - Выход")
-        val input = readlnOrNull()?.trim() ?: ""
-
-        when (input) {
-            "1" -> {
-                while (true) {
-                    val question = learning.getNextQuestion()
-                    if (question == null) {
-                        println("Все слова выучены!")
-                        break
-                    } else {
-                        println(question.asConsoleString())
-                        val userAnswerInput = readlnOrNull()?.trim() ?: ""
-                        if (userAnswerInput == "0") break
-
-                        val chosenId = userAnswerInput.toIntOrNull()
-                        if (chosenId == null || chosenId !in 1..question.variants.size) {
-                            println("Введите число от 1 до ${question.variants.size} или 0")
-                            continue
-                        }
-                        if (learning.checkAnswer(chosenId - 1)) {
-                            println("Правильно!")
-                        } else {
-                            println("Неправильно! ${question.correctAnswer.original} - это ${question.correctAnswer.translate}.")
-                        }
-                        println()
-                    }
-                }
-            }
-
-            "2" -> {
-                val statistics = learning.getStatistics()
-                println("Выучено ${statistics.learnedWords.size} из ${statistics.totalCount} слов | ${statistics.percent} %")
-            }
-
-            "0" -> {
-                println("Выход в меню")
-                break
-            }
-
-            else -> println("Введите число 1, 2 или 0")
-        }
+        Thread.sleep(2000)
+        val lastUpdateId = telegramBotService.getUpdates(offset, trainer)
+        offset = lastUpdateId + 1
     }
 }
