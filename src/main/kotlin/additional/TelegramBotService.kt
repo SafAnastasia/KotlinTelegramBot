@@ -10,6 +10,11 @@ class TelegramBotService(private val botToken: String) {
     private val baseUrl = "https://api.telegram.org/bot$botToken"
     private val client: HttpClient = HttpClient.newBuilder().build()
 
+    companion object {
+        const val STATISTICS_CLICKED = "statistics"
+        const val LEARN_WORDS_CLICKED = "learn_words"
+    }
+
     fun getUpdates(offset: Long, trainer: LearnWordsTrainer): Long {
         val url = "$baseUrl/getUpdates?offset=$offset"
         val request: HttpRequest = HttpRequest.newBuilder()
@@ -50,13 +55,13 @@ class TelegramBotService(private val botToken: String) {
 
         if (callbackChatId != null) {
             when (callbackData) {
-                "learn_words" -> sendMessage(callbackChatId, "Начинаем учить слова!")
-                "statistics" -> {
+                LEARN_WORDS_CLICKED -> sendMessage(callbackChatId, "Начинаем учить слова!")
+
+                STATISTICS_CLICKED -> {
                     val statistics = trainer.getStatistics()
-                    sendMessage(
-                        callbackChatId,
+                    val statisticsMessage =
                         "Выучено ${statistics.learnedWords.size} из ${statistics.totalCount} слов | ${statistics.percent}%"
-                    )
+                    sendMessage(callbackChatId, statisticsMessage)
                 }
             }
         }
