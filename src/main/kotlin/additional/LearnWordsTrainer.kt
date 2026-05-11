@@ -16,8 +16,17 @@ data class Question(
 
 data class Statistics(
     val totalCount: Int,
-    val learnedWords: List<Word>,
+    val learnedCount: Int,
     val percent: Int,
+)
+
+
+data class Update(
+    val updateId: Long,
+    val chatId: Long?,
+    val messageText: String?,
+    val callbackData: String?,
+    val callbackChatId: Long?
 )
 
 fun Question.asConsoleString(): String {
@@ -77,12 +86,12 @@ class LearnWordsTrainer {
     }
 
     fun getStatistics(): Statistics {
-        val totalCount = dictionary.size//всего слов
-        val learnedWords = dictionary.filter { it.correctAnswersCount >= CORRECT_ANSWERS }
+        val totalCount = dictionary.size
+        val learnedCount = dictionary.count { it.correctAnswersCount >= CORRECT_ANSWERS }
         val percent = if (totalCount > 0) {
-            (learnedWords.size.toDouble() / totalCount * 100).toInt()
+            (learnedCount.toDouble() / totalCount * 100).toInt()
         } else 0
-        return Statistics(totalCount, learnedWords, percent)
+        return Statistics(totalCount, learnedCount, percent)
     }
 
     private fun loadDictionary(): List<Word> {
