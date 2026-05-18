@@ -51,7 +51,7 @@ class TelegramBotService(private val botToken: String) {
 
     fun sendQuestion(chatId: Long, question: Question) {
         val keyboard = question.variants.mapIndexed { index, word ->
-            """[{"text:"${word.translate}", "callback_data": "$CALLBACK_DATA_ANSWER_PREFIX$index"}]"""
+            """[{"text":"${word.translate}", "callback_data": "$CALLBACK_DATA_ANSWER_PREFIX$index"}]"""
         }.joinToString(separator = ",\n")
 
         val requestBody = """
