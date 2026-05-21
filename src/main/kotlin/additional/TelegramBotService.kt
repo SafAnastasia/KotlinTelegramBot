@@ -1,6 +1,7 @@
 package org.example.additional
 
 import java.net.URI
+import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -12,15 +13,13 @@ class TelegramBotService(private val botToken: String) {
     companion object {
         const val STATISTICS_CLICKED = "statistics"
         const val LEARN_WORDS_CLICKED = "learn_words"
+        const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
     }
 
     fun getUpdates(offset: Long): List<Update> {
         val url = "$baseUrl/getUpdates?offset=$offset"
-        val request: HttpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .build()
-        val response: HttpResponse<String> =
-            client.send(request, HttpResponse.BodyHandlers.ofString())
+        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(url)).build()
+        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
         val responseBody: String = response.body()
 
         val updateIdPattern = Regex(""""update_id":(\d+)""")
@@ -29,8 +28,7 @@ class TelegramBotService(private val botToken: String) {
         val callbackDataPattern = Regex(""""callback_query":\{.*?"data":"(.*?)"""")
         val callbackChatIdPattern = Regex(""""callback_query":\{.*?"from":\{"id":(\d+)""")
 
-        val updateId = updateIdPattern.find(responseBody)
-            ?.groupValues?.get(1)?.toLong() ?: return emptyList()
+        val updateId = updateIdPattern.find(responseBody)?.groupValues?.get(1)?.toLong() ?: return emptyList()
 
         val update = Update(
             updateId = updateId,
@@ -46,12 +44,37 @@ class TelegramBotService(private val botToken: String) {
     fun sendMessage(chatId: Long, text: String) {
         val encodedText = URLEncoder.encode(text, "UTF-8")
         val url = "$baseUrl/sendMessage?chat_id=$chatId&text=$encodedText"
+        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(url)).build()
+        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        println("Сообщение отправлено: ${response.body()}")
+    }
+
+    fun sendQuestion(chatId: Long, question: Question) {
+        val keyboard = question.variants.mapIndexed { index, word ->
+            """[{"text":"${word.translate}", "callback_data": "$CALLBACK_DATA_ANSWER_PREFIX$index"}]"""
+        }.joinToString(separator = ",\n")
+
+        val requestBody = """
+            {
+                "chat_id": $chatId,
+                "text": "${question.correctAnswer.original}",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        $keyboard
+                    ]
+                }
+            }
+        """.trimIndent()
+
+
         val request: HttpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(url))
+            .uri(URI.create("$baseUrl/sendMessage"))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build()
         val response: HttpResponse<String> =
             client.send(request, HttpResponse.BodyHandlers.ofString())
-        println("Сообщение отправлено: ${response.body()}")
+        println("Вопрос отправлен: ${response.body()}")
     }
 
     fun sendMenu(chatId: Long) {
@@ -68,11 +91,12 @@ class TelegramBotService(private val botToken: String) {
                 }
             }
         """.trimIndent()
-        val request: HttpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-            .build()
+        val request: HttpRequest =
+            HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build()
         val response: HttpResponse<String> =
             client.send(request, HttpResponse.BodyHandlers.ofString())
         println("Меню отправлено: ${response.body()}")

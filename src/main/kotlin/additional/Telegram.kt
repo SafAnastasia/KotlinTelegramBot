@@ -27,8 +27,10 @@ fun main(args: Array<String>) {
 
             if (update.callbackChatId != null) {
                 when (update.callbackData) {
-                    TelegramBotService.LEARN_WORDS_CLICKED ->
-                        telegramBotService.sendMessage(update.callbackChatId, "Начинаем учить слова!")
+
+                    TelegramBotService.LEARN_WORDS_CLICKED -> {
+                        checkNextQuestionAndSend(trainer, telegramBotService, update.callbackChatId)
+                    }
 
                     TelegramBotService.STATISTICS_CLICKED -> {
                         val statistics = trainer.getStatistics()
@@ -39,5 +41,18 @@ fun main(args: Array<String>) {
                 }
             }
         }
+    }
+}
+
+fun checkNextQuestionAndSend(
+    trainer: LearnWordsTrainer,
+    telegramBotService: TelegramBotService,
+    chatId: Long,
+) {
+    val question = trainer.getNextQuestion()
+    if (question == null) {
+        telegramBotService.sendMessage(chatId, "Вы выучили все слова в базе")
+    } else {
+        telegramBotService.sendQuestion(chatId, question)
     }
 }
