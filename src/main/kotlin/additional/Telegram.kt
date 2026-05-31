@@ -26,18 +26,50 @@ fun main(args: Array<String>) {
             }
 
             if (update.callbackChatId != null) {
-                when (update.callbackData) {
-                    TelegramBotService.LEARN_WORDS_CLICKED ->
-                        telegramBotService.sendMessage(update.callbackChatId, "Начинаем учить слова!")
+                val callbackData = update.callbackData
+                when {
+                    callbackData == TelegramBotService.LEARN_WORDS_CLICKED -> {
+                        checkNextQuestionAndSend(trainer, telegramBotService, update.callbackChatId)
+                    }
 
-                    TelegramBotService.STATISTICS_CLICKED -> {
+                    callbackData == TelegramBotService.STATISTICS_CLICKED -> {
                         val statistics = trainer.getStatistics()
                         val statisticsMessage =
                             "Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%"
                         telegramBotService.sendMessage(update.callbackChatId, statisticsMessage)
                     }
+
+                    callbackData != null && callbackData.startsWith(TelegramBotService.CALLBACK_DATA_ANSWER_PREFIX) -> {
+                        val userAnswerIndex = callbackData
+                            .substringAfter(TelegramBotService.CALLBACK_DATA_ANSWER_PREFIX)
+                            .toInt()
+                        if (trainer.checkAnswer(userAnswerIndex)) {
+                            telegramBotService.sendMessage(update.callbackChatId, "Правильно!")
+                        } else {
+                            val correctAnswer = trainer.question?.correctAnswer
+                            telegramBotService.sendMessage(
+                                update.callbackChatId,
+                                "Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}"
+                            )
+                        }
+
+                        checkNextQuestionAndSend(trainer, telegramBotService, update.callbackChatId)
+                    }
                 }
             }
         }
+    }
+}
+
+fun checkNextQuestionAndSend(
+    trainer: LearnWordsTrainer,
+    telegramBotService: TelegramBotService,
+    chatId: Long,
+) {
+    val question = trainer.getNextQuestion()
+    if (question == null) {
+        telegramBotService.sendMessage(chatId, "Вы выучили все слова в базе")
+    } else {
+        telegramBotService.sendQuestion(chatId, question)
     }
 }
