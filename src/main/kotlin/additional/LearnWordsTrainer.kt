@@ -45,7 +45,7 @@ class LearnWordsTrainer {
         private const val WORDS_FILE = "words.txt"
     }
 
-    private var question: Question? = null
+    var question: Question? = null
     private val dictionary = loadDictionary()
 
     fun getNextQuestion(): Question? {
