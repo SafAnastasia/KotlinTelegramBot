@@ -40,6 +40,28 @@ data class From(
     val id: Long
 )
 
+@Serializable
+data class SendMessageRequest(
+    @SerialName("chat_id")
+    val chatId: Long,
+    val text: String,
+    @SerialName("reply_markup")
+    val replyMarkup: ReplyMarkup? = null
+)
+
+@Serializable
+data class ReplyMarkup(
+    @SerialName("inline_keyboard")
+    val inlineKeyboard: List<List<InlineKeyboardButton>>
+)
+
+@Serializable
+data class InlineKeyboardButton(
+    val text: String,
+    @SerialName("callback_data")
+    val callbackData: String
+)
+
 data class Word(
     val original: String,
     val translate: String,
