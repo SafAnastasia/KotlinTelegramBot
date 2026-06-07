@@ -2,6 +2,43 @@ package org.example.additional
 
 import java.io.File
 import java.io.IOException
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
+
+@Serializable
+data class Response(
+    val result: List<Update> = emptyList()
+)
+@Serializable
+data class Update(
+    @SerialName("update_id")
+    val updateId: Long,
+    val message: Message? = null,
+    @SerialName ("callback_query")
+    val callbackQuery:  CallbackQuery? = null
+)
+@Serializable
+data class Message(
+    val chat: Chat,
+    val text: String? = null
+)
+
+@Serializable
+data class Chat(
+    val id: Long
+)
+
+@Serializable
+data class CallbackQuery(
+    val id: String,
+    val from: From,
+    val data: String? = null
+)
+
+@Serializable
+data class From(
+    val id: Long
+)
 
 data class Word(
     val original: String,
@@ -18,15 +55,6 @@ data class Statistics(
     val totalCount: Int,
     val learnedCount: Int,
     val percent: Int,
-)
-
-
-data class Update(
-    val updateId: Long,
-    val chatId: Long?,
-    val messageText: String?,
-    val callbackData: String?,
-    val callbackChatId: Long?
 )
 
 fun Question.asConsoleString(): String {

@@ -5,10 +5,13 @@ import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import kotlinx.serialization.json.Json
 
 class TelegramBotService(private val botToken: String) {
     private val baseUrl = "https://api.telegram.org/bot$botToken"
     private val client: HttpClient = HttpClient.newBuilder().build()
+
+    private val json = Json {ignoreUnknownKeys = true}
 
     companion object {
         const val STATISTICS_CLICKED = "statistics"
@@ -20,25 +23,8 @@ class TelegramBotService(private val botToken: String) {
         val url = "$baseUrl/getUpdates?offset=$offset"
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(url)).build()
         val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-        val responseBody: String = response.body()
-
-        val updateIdPattern = Regex(""""update_id":(\d+)""")
-        val chatIdPattern = Regex(""""chat":\{"id":(\d+)""")
-        val textPattern = Regex(""""text":"(.*?)"""")
-        val callbackDataPattern = Regex(""""callback_query":\{.*?"data":"(.*?)"""")
-        val callbackChatIdPattern = Regex(""""callback_query":\{.*?"from":\{"id":(\d+)""")
-
-        val updateId = updateIdPattern.find(responseBody)?.groupValues?.get(1)?.toLong() ?: return emptyList()
-
-        val update = Update(
-            updateId = updateId,
-            chatId = chatIdPattern.find(responseBody)?.groupValues?.get(1)?.toLong(),
-            messageText = textPattern.find(responseBody)?.groupValues?.get(1),
-            callbackData = callbackDataPattern.find(responseBody)?.groupValues?.get(1),
-            callbackChatId = callbackChatIdPattern.find(responseBody)?.groupValues?.get(1)?.toLong()
-        )
-
-        return listOf(update)
+        val telegramResponse = json.decodeFromString<Response>(response.body())
+        return telegramResponse.result
     }
 
     fun sendMessage(chatId: Long, text: String) {
