@@ -191,4 +191,10 @@ class LearnWordsTrainer {
             println("Ошибка при сохранении словаря: ${e.message}")
         }
     }
+
+    fun resetProgress() {
+        dictionary.forEach { it.correctAnswersCount = 0 }
+        saveDictionary(dictionary)
+        question = null
+    }
 }

@@ -8,7 +8,7 @@ fun main(args: Array<String>) {
 
     val botToken = args[0]
     val telegramBotService = TelegramBotService(botToken)
-    val trainer = LearnWordsTrainer()
+    val trainer = mutableMapOf<Long, LearnWordsTrainer>()
 
     var offset: Long = 0L
 
@@ -23,6 +23,10 @@ fun main(args: Array<String>) {
                 val messageText = update.message?.text
                 val callbackChatId = update.callbackQuery?.from?.id
                 val callbackData = update.callbackQuery?.data
+
+                val userId = chatId ?: callbackChatId ?: return@forEach
+
+                val trainer = trainer.getOrPut(userId) { LearnWordsTrainer() }
 
                 if (chatId != null) {
                     when (messageText) {
@@ -60,6 +64,14 @@ fun main(args: Array<String>) {
                             }
 
                             checkNextQuestionAndSend(trainer, telegramBotService, callbackChatId)
+                        }
+
+                        callbackData == TelegramBotService.RESET_CLICKED -> {
+                            trainer.resetProgress()
+                            telegramBotService.sendMessage(
+                                callbackChatId,
+                                "Прогресс сброшен! Начинаем сначала."
+                            )
                         }
                     }
                 }
