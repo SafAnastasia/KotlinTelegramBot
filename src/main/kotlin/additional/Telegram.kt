@@ -14,49 +14,58 @@ fun main(args: Array<String>) {
 
     while (true) {
         Thread.sleep(2000)
-        val updates = telegramBotService.getUpdates(offset)
-        updates.forEach { update ->
-            offset = update.updateId + 1
+        try {
+            val updates = telegramBotService.getUpdates(offset)
+            updates.forEach { update ->
+                offset = update.updateId + 1
 
-            if (update.chatId != null) {
-                when (update.messageText) {
-                    "/start" -> telegramBotService.sendMenu(update.chatId)
-                    "Hello" -> telegramBotService.sendMessage(update.chatId, "Hello")
+                val chatId = update.message?.chat?.id
+                val messageText = update.message?.text
+                val callbackChatId = update.callbackQuery?.from?.id
+                val callbackData = update.callbackQuery?.data
+
+                if (chatId != null) {
+                    when (messageText) {
+                        "/start" -> telegramBotService.sendMenu(chatId)
+                        "Hello" -> telegramBotService.sendMessage(chatId, "Hello")
+                    }
                 }
-            }
 
-            if (update.callbackChatId != null) {
-                val callbackData = update.callbackData
-                when {
-                    callbackData == TelegramBotService.LEARN_WORDS_CLICKED -> {
-                        checkNextQuestionAndSend(trainer, telegramBotService, update.callbackChatId)
-                    }
+                if (callbackChatId != null) {
+                    when {
+                        callbackData == TelegramBotService.LEARN_WORDS_CLICKED -> {
+                            checkNextQuestionAndSend(trainer, telegramBotService, callbackChatId)
+                        }
 
-                    callbackData == TelegramBotService.STATISTICS_CLICKED -> {
-                        val statistics = trainer.getStatistics()
-                        val statisticsMessage =
-                            "Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%"
-                        telegramBotService.sendMessage(update.callbackChatId, statisticsMessage)
-                    }
-
-                    callbackData != null && callbackData.startsWith(TelegramBotService.CALLBACK_DATA_ANSWER_PREFIX) -> {
-                        val userAnswerIndex = callbackData
-                            .substringAfter(TelegramBotService.CALLBACK_DATA_ANSWER_PREFIX)
-                            .toInt()
-                        if (trainer.checkAnswer(userAnswerIndex)) {
-                            telegramBotService.sendMessage(update.callbackChatId, "Правильно!")
-                        } else {
-                            val correctAnswer = trainer.question?.correctAnswer
+                        callbackData == TelegramBotService.STATISTICS_CLICKED -> {
+                            val statistics = trainer.getStatistics()
                             telegramBotService.sendMessage(
-                                update.callbackChatId,
-                                "Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}"
+                                callbackChatId,
+                                "Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%"
                             )
                         }
 
-                        checkNextQuestionAndSend(trainer, telegramBotService, update.callbackChatId)
+                        callbackData != null && callbackData.startsWith(TelegramBotService.CALLBACK_DATA_ANSWER_PREFIX) -> {
+                            val userAnswerIndex = callbackData
+                                .substringAfter(TelegramBotService.CALLBACK_DATA_ANSWER_PREFIX)
+                                .toInt()
+                            if (trainer.checkAnswer(userAnswerIndex)) {
+                                telegramBotService.sendMessage(callbackChatId, "Правильно!")
+                            } else {
+                                val correctAnswer = trainer.question?.correctAnswer
+                                telegramBotService.sendMessage(
+                                    callbackChatId,
+                                    "Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}"
+                                )
+                            }
+
+                            checkNextQuestionAndSend(trainer, telegramBotService, callbackChatId)
+                        }
                     }
                 }
             }
+        } catch (e: Exception) {
+            println("Ошибка сети: ${e.message}")
         }
     }
 }
