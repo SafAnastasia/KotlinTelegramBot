@@ -9,14 +9,16 @@ import kotlinx.serialization.SerialName
 data class Response(
     val result: List<Update> = emptyList()
 )
+
 @Serializable
 data class Update(
     @SerialName("update_id")
     val updateId: Long,
     val message: Message? = null,
-    @SerialName ("callback_query")
-    val callbackQuery:  CallbackQuery? = null
+    @SerialName("callback_query")
+    val callbackQuery: CallbackQuery? = null
 )
+
 @Serializable
 data class Message(
     val chat: Chat,
@@ -86,13 +88,12 @@ fun Question.asConsoleString(): String {
     return "${this.correctAnswer.original}\n$variants\n0 - выйти в меню"
 }
 
-class LearnWordsTrainer {
+class LearnWordsTrainer(private val fileName: String = "words.txt") {
     companion object {
         private const val SEPARATOR = "|"
         private const val PART = 3
         private const val ANSWER_OPTIONS = 4
         private const val CORRECT_ANSWERS = 3
-        private const val WORDS_FILE = "words.txt"
     }
 
     var question: Question? = null
@@ -113,8 +114,8 @@ class LearnWordsTrainer {
                 learnedList.shuffled().take(minOf(need, learnedList.size))
             )
         }
-        val correctAnswer = questionWords.random()
 
+        val correctAnswer = questionWords.random()
         question = Question(
             variants = questionWords,
             correctAnswer = correctAnswer,
@@ -129,9 +130,7 @@ class LearnWordsTrainer {
                 it.correctAnswer.correctAnswersCount++
                 saveDictionary(dictionary)
                 true
-            } else {
-                false
-            }
+            } else false
         } ?: false
     }
 
@@ -145,20 +144,16 @@ class LearnWordsTrainer {
     }
 
     private fun loadDictionary(): List<Word> {
-        val wordsFile = File("words.txt")
+        val wordsFile = File(fileName)
         val dictionary = mutableListOf<Word>()
 
         try {
-            if (!wordsFile.exists()) {
-                wordsFile.createNewFile()
-            }
-
+            if (!wordsFile.exists()) wordsFile.createNewFile()
             if (wordsFile.readText().isBlank()) {
                 wordsFile.writeText("hello|привет|0\n")
                 wordsFile.appendText("dog|собака|0\n")
                 wordsFile.appendText("cat|кошка|0\n")
             }
-
             val lines: List<String> = wordsFile.readLines()
 
             for (line in lines) {
@@ -166,18 +161,21 @@ class LearnWordsTrainer {
                 val parts = line.split(SEPARATOR)
                 if (parts.size < PART) continue
 
-                val word = Word(original = parts[0], translate = parts[1], correctAnswersCount = parts[2].toInt())
+                val word = Word(
+                    original = parts[0],
+                    translate = parts[1],
+                    correctAnswersCount = parts[2].toInt()
+                )
                 dictionary.add(word)
             }
         } catch (e: IOException) {
             println("Ошибка при работе с файлом: ${e.message}")
-            e.printStackTrace()
         }
         return dictionary
     }
 
     private fun saveDictionary(dictionary: List<Word>) {
-        val wordsFile = File(WORDS_FILE)
+        val wordsFile = File(fileName)
 
         try {
             val content = buildString {
@@ -185,7 +183,6 @@ class LearnWordsTrainer {
                     append("${word.original}|${word.translate}|${word.correctAnswersCount}\n")
                 }
             }
-
             wordsFile.writeText(content)
         } catch (e: IOException) {
             println("Ошибка при сохранении словаря: ${e.message}")
@@ -198,3 +195,4 @@ class LearnWordsTrainer {
         question = null
     }
 }
+
