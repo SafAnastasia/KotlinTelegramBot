@@ -17,6 +17,7 @@ class TelegramBotService(private val botToken: String) {
         const val STATISTICS_CLICKED = "statistics"
         const val LEARN_WORDS_CLICKED = "learn_words"
         const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
+        const val RESET_CLICKED = "reset_progress"
     }
 
     fun getUpdates(offset: Long): List<Update> {
@@ -83,7 +84,11 @@ class TelegramBotService(private val botToken: String) {
                     listOf(InlineKeyboardButton(
                             text = "Статистика",
                             callbackData = STATISTICS_CLICKED
-                        ))
+                        )),
+                    listOf(InlineKeyboardButton(
+                        text = "Сбросить прогресс",
+                        callbackData = RESET_CLICKED
+                    ))
                     )
                 )
             )
