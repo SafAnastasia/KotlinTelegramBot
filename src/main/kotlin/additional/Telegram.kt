@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
 
                 val userId = chatId ?: callbackChatId ?: return@forEach
 
-                val trainer = trainer.getOrPut(userId) { LearnWordsTrainer() }
+                val trainer = trainer.getOrPut(userId) { LearnWordsTrainer("$userId.txt") }
 
                 if (chatId != null) {
                     when (messageText) {
