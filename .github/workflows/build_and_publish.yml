@@ -22,12 +22,15 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew shadowJar
 
-      - name: Copy jar via SCP
+      - name: Copy jar via SFTP
         run: |
           sudo apt-get install -y sshpass
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no \
-            build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar \
-            ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:/root/bot.jar
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" sftp \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.HOST }} << 'SFTP'
+          put build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar /root/bot.jar
+          bye
+          SFTP
 
       - name: Restart bot on VPS
         uses: appleboy/ssh-action@v1.0.3
