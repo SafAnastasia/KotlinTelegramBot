@@ -28,6 +28,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
           source: "build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar"
           target: "/root"
 
@@ -37,6 +38,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
           script: |
             mv /root/build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar /root/bot.jar
             systemctl restart english-learning-bot
