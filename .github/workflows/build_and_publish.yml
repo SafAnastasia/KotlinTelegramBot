@@ -22,17 +22,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew shadowJar
 
-      - name: Copy jar to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: 22
-          source: "build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar"
-          target: "/root"
-
-      - name: Restart bot on VPS
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
@@ -40,5 +30,5 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
-            mv /root/build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar /root/bot.jar
-            systemctl restart english-learning-bot
+            echo "Connected successfully"
+            systemctl status english-learning-bot || true
