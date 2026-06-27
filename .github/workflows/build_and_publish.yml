@@ -11,43 +11,32 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Build with Gradle
         run: ./gradlew shadowJar
 
-      - name: Rename file
-        run: mv build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar bot.jar
-
-      - name: Deploy jar to VPS
-        uses: appleboy/scp-action@master
+      - name: Copy jar to VPS
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: bot.jar
-          target: /root
+          source: "build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar"
+          target: "/root"
 
-      - name: Deploy words.txt to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: words.txt
-          target: /root
-
-      - name: Restart Remote Service
-        uses: appleboy/ssh-action@master
+      - name: Restart bot on VPS
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
+            mv /root/build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar /root/bot.jar
             systemctl restart english-learning-bot
