@@ -61,7 +61,9 @@ class QuestionTest {
     val lines = question.asConsoleString().lines()
 
     assertEquals(question.variants.size + 2, lines.size)
-}
+
+    }
+
     @Test
     fun `single variant question`() {
         val singleQuestion = Question(
@@ -121,6 +123,7 @@ class LearnWordsTrainerStatisticsTest {
         assertEquals(50, statistics.percent)
     }
 }
+
 class LearnWordsTrainerBehaviorTest {
 
     private lateinit var dictionaryFile: File
