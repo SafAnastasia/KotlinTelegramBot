@@ -127,7 +127,6 @@ class LearnWordsTrainerBehaviorTest {
 
     @BeforeTest
     fun setUp() {
-        // 3 невыученных слова (count < 3) и 2 выученных (count >= 3)
         dictionaryFile = File.createTempFile("test_words", ".txt")
         dictionaryFile.writeText(
             "hello|привет|0\n" +
