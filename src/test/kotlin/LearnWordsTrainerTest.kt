@@ -1,5 +1,8 @@
 package org.example.additional
 
+import java.io.File
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -76,4 +79,128 @@ class QuestionTest {
         assertTrue(question.asConsoleString().contains("1 - привет"))
     }
 
+}
+
+class LearnWordsTrainerStatisticsTest {
+
+    private lateinit var dictionaryFile: File
+
+    @BeforeTest
+    fun setUp() {
+    dictionaryFile = File.createTempFile("test_words", ".txt")
+    dictionaryFile.writeText(
+    "hello|привет|3\n" +
+    "dog|собака|3\n" +
+    "cat|кошка|1\n" +
+    "sun|солнце|0\n"
+    )
+}
+    @AfterTest
+    fun tearDown() {
+        dictionaryFile.delete()
     }
+
+    @Test
+    fun `total count equals number of words in dictionary file`() {
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        val statistics = trainer.getStatistics()
+        assertEquals(4, statistics.totalCount)
+    }
+
+    @Test
+    fun `learned count equals words with correctAnswersCount at or above threshold`() {
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        val statistics = trainer.getStatistics()
+        assertEquals(2, statistics.learnedCount)
+    }
+
+    @Test
+    fun `percent is calculated from learned and total count`() {
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        val statistics = trainer.getStatistics()
+        assertEquals(50, statistics.percent)
+    }
+}
+class LearnWordsTrainerBehaviorTest {
+
+    private lateinit var dictionaryFile: File
+
+    @BeforeTest
+    fun setUp() {
+        // 3 невыученных слова (count < 3) и 2 выученных (count >= 3)
+        dictionaryFile = File.createTempFile("test_words", ".txt")
+        dictionaryFile.writeText(
+            "hello|привет|0\n" +
+                    "dog|собака|1\n" +
+                    "cat|кошка|3\n" +
+                    "sun|солнце|4\n" +
+                    "moon|луна|0\n"
+        )
+    }
+
+    @AfterTest
+    fun tearDown() {
+        dictionaryFile.delete()
+    }
+
+    @Test
+    fun `getNextQuestion returns question with correct answer among variants`() {
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+
+        val question = trainer.getNextQuestion()
+
+        assertTrue(question != null)
+        assertTrue(question!!.variants.contains(question.correctAnswer))
+    }
+
+    @Test
+    fun `getNextQuestion returns null when all words are learned`() {
+        dictionaryFile.writeText(
+            "hello|привет|3\n" +
+                    "dog|собака|4\n"
+        )
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+
+        val question = trainer.getNextQuestion()
+
+        assertTrue(question == null)
+    }
+
+    @Test
+    fun `checkAnswer returns true and increments count for correct index`() {
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        val question = trainer.getNextQuestion()!!
+        val correctIndex = question.variants.indexOf(question.correctAnswer)
+        val countBefore = question.correctAnswer.correctAnswersCount
+
+        val result = trainer.checkAnswer(correctIndex)
+
+        assertTrue(result)
+        assertEquals(countBefore + 1, question.correctAnswer.correctAnswersCount)
+    }
+
+    @Test
+    fun `checkAnswer returns false and does not change count for incorrect index`() {
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        val question = trainer.getNextQuestion()!!
+        val correctIndex = question.variants.indexOf(question.correctAnswer)
+        val wrongIndex = (correctIndex + 1) % question.variants.size
+        val countBefore = question.correctAnswer.correctAnswersCount
+
+        val result = trainer.checkAnswer(wrongIndex)
+
+        assertTrue(!result)
+        assertEquals(countBefore, question.correctAnswer.correctAnswersCount)
+    }
+
+    @Test
+    fun `resetProgress sets all counters to zero and clears current question`() {
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        trainer.getNextQuestion()
+
+        trainer.resetProgress()
+
+        assertEquals(0, trainer.getStatistics().learnedCount)
+        assertTrue(trainer.question == null)
+    }
+}
