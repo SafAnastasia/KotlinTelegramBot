@@ -278,4 +278,5 @@ fun `getNextQuestion with 5 unlearned words return 4 variants from that pool`() 
         assertEquals(0, trainer.getStatistics().learnedCount)
         assertTrue(trainer.question == null)
     }
+
 }
