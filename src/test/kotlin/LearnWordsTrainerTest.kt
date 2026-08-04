@@ -122,7 +122,41 @@ class LearnWordsTrainerStatisticsTest {
         val statistics = trainer.getStatistics()
         assertEquals(50, statistics.percent)
     }
+
+    @Test
+    fun `statistics with 4 words of 7` () {
+        dictionaryFile.writeText(
+            "hello|привет| 3\n" +
+                    "dog|собака|1\n" +
+                    "cat|кошка|3\n" +
+                    "sun|солнце|3\n" +
+                    "moon|луна|1\n" +
+                    "star|звезда|0\n" +
+                    "cloud|облако|2\n"
+        )
+
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        val statistics = trainer.getStatistics()
+
+        assertEquals(7, statistics.totalCount)
+        assertEquals(4, statistics.learnedCount)
+    }
+
+    @Test
+    fun `statistics with corrupted file` () {
+        dictionaryFile.writeText(
+            "broken_line_without_separator\n" +
+                    "dog|собака\n" +
+                    "cat|кошка|1\n"
+        )
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+        val statistics = trainer.getStatistics()
+
+        assertEquals(2, statistics.totalCount)
+        assertEquals(1, statistics.learnedCount)
+    }
 }
+
 
 class LearnWordsTrainerBehaviorTest {
 
@@ -153,6 +187,45 @@ class LearnWordsTrainerBehaviorTest {
 
         assertTrue(question != null)
         assertTrue(question!!.variants.contains(question.correctAnswer))
+    }
+
+@Test
+fun `getNextQuestion with 5 unlearned words return 4 variants from that pool`() {
+    dictionaryFile.writeText(
+        "hello|привет|0\n" +
+                "dog|собака|1\n" +
+                "cat|кошка|2\n" +
+                "sun|солнце|0\n" +
+                "moon|луна|1\n"
+    )
+    val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+
+    val question = trainer.getNextQuestion()
+
+    assertTrue(question != null)
+    assertEquals(4, question!!.variants.size)
+    val unlearnedOriginals = setOf("hello", "dog", "cat", "sun","moon")
+    assertTrue(question.variants.all { it.original in unlearnedOriginals })
+}
+
+    @Test
+    fun `getNextQuestion with 1 unlearned word fills remaining variants from learned words ` () {
+        dictionaryFile.writeText(
+            "hello|привет|0\n" +
+                    "dog|собака|3\n" +
+                    "cat|кошка|3\n" +
+                    "sun|солнце|3\n" +
+                    "moon|луна|3\n"
+        )
+
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+
+        val question = trainer.getNextQuestion()
+
+        assertTrue(question != null)
+        assertEquals("hello", question!!.correctAnswer.original)
+        assertEquals(4, question.variants.size)
+        assertTrue(question.variants.contains(question.correctAnswer))
     }
 
     @Test
