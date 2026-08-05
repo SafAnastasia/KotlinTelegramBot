@@ -6,6 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+
 class QuestionTest {
     private val hello = Word(original = "hello", translate = "привет")
     private val dog = Word(original = "dog", translate = "собака")
