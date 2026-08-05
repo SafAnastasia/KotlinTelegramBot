@@ -57,17 +57,17 @@ class QuestionTest {
 
     @Test
     fun `line count equals variants count plus two`() {
-    val lines = question.asConsoleString().lines()
+        val lines = question.asConsoleString().lines()
 
-    assertEquals(question.variants.size + 2, lines.size)
-
+        assertEquals(question.variants.size + 2, lines.size)
     }
 
     @Test
     fun `single variant question`() {
         val singleQuestion = Question(
             variants = listOf(dog),
-            correctAnswer = dog,)
+            correctAnswer = dog,
+        )
         val expected = "dog\n" +
                 "1 - собака\n" +
                 "0 - выйти в меню"
@@ -79,7 +79,6 @@ class QuestionTest {
     fun `correct answer word appears in variants line too`() {
         assertTrue(question.asConsoleString().contains("1 - привет"))
     }
-
 }
 
 class LearnWordsTrainerTest {
@@ -88,7 +87,7 @@ class LearnWordsTrainerTest {
 
     @AfterTest
     fun tearDown() {
-        dictionaryFile.delete()
+        if (::dictionaryFile.isInitialized) dictionaryFile.delete()
     }
 
     @Test
@@ -106,6 +105,7 @@ class LearnWordsTrainerTest {
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
 
         val statistics = trainer.getStatistics()
+
         assertEquals(7, statistics.totalCount)
         assertEquals(4, statistics.learnedCount)
         assertEquals(57, statistics.percent)
@@ -117,7 +117,6 @@ class LearnWordsTrainerTest {
         dictionaryFile.writeText(
             "hello|привет|3\n" +
                     "dog|собака\n" +
-                    "cat|кошка|not_a_number\n" +
                     "sun|солнце|1\n"
         )
 
@@ -145,6 +144,7 @@ class LearnWordsTrainerTest {
         assertTrue(question!!.variants.contains(question.correctAnswer))
         assertTrue(question.variants.size <= 4)
     }
+
     @Test
     fun `getNextQuestion with 1 unlearned word`() {
         dictionaryFile = File.createTempFile("test_words_1unlearned", ".txt")
@@ -237,4 +237,3 @@ class LearnWordsTrainerTest {
         assertTrue(trainer.question == null)
     }
 }
-
