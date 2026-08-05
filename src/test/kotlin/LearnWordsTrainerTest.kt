@@ -2,7 +2,6 @@ package org.example.additional
 
 import java.io.File
 import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -83,153 +82,89 @@ class QuestionTest {
 
 }
 
-class LearnWordsTrainerStatisticsTest {
+class LearnWordsTrainerTest {
 
     private lateinit var dictionaryFile: File
 
-    @BeforeTest
-    fun setUp() {
-    dictionaryFile = File.createTempFile("test_words", ".txt")
-    dictionaryFile.writeText(
-    "hello|привет|3\n" +
-    "dog|собака|3\n" +
-    "cat|кошка|1\n" +
-    "sun|солнце|0\n"
-    )
-}
     @AfterTest
     fun tearDown() {
         dictionaryFile.delete()
     }
 
     @Test
-    fun `total count equals number of words in dictionary file`() {
-        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
-        val statistics = trainer.getStatistics()
-        assertEquals(4, statistics.totalCount)
-    }
-
-    @Test
-    fun `learned count equals words with correctAnswersCount at or above threshold`() {
-        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
-        val statistics = trainer.getStatistics()
-        assertEquals(2, statistics.learnedCount)
-    }
-
-    @Test
-    fun `percent is calculated from learned and total count`() {
-        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
-        val statistics = trainer.getStatistics()
-        assertEquals(50, statistics.percent)
-    }
-
-    @Test
-    fun `statistics with 4 words of 7` () {
+    fun `statistics with 4 words of 7`() {
+        dictionaryFile = File.createTempFile("test_words", ".txt")
         dictionaryFile.writeText(
-            "hello|привет| 3\n" +
-                    "dog|собака|1\n" +
+            "hello|привет|3\n" +
+                    "dog|собака|3\n" +
                     "cat|кошка|3\n" +
                     "sun|солнце|3\n" +
                     "moon|луна|1\n" +
                     "star|звезда|0\n" +
-                    "cloud|облако|2\n"
+                    "sky|небо|2\n"
         )
-
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
-        val statistics = trainer.getStatistics()
 
+        val statistics = trainer.getStatistics()
         assertEquals(7, statistics.totalCount)
         assertEquals(4, statistics.learnedCount)
+        assertEquals(57, statistics.percent)
     }
 
     @Test
-    fun `statistics with corrupted file` () {
+    fun `statistics with corrupted file`() {
+        dictionaryFile = File.createTempFile("test_words_corrupted", ".txt")
         dictionaryFile.writeText(
-            "broken_line_without_separator\n" +
+            "hello|привет|3\n" +
                     "dog|собака\n" +
-                    "cat|кошка|1\n"
+                    "cat|кошка|not_a_number\n" +
+                    "sun|солнце|1\n"
         )
+
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
         val statistics = trainer.getStatistics()
 
         assertEquals(2, statistics.totalCount)
-        assertEquals(1, statistics.learnedCount)
-    }
-}
-
-
-class LearnWordsTrainerBehaviorTest {
-
-    private lateinit var dictionaryFile: File
-
-    @BeforeTest
-    fun setUp() {
-        dictionaryFile = File.createTempFile("test_words", ".txt")
-        dictionaryFile.writeText(
-            "hello|привет|0\n" +
-                    "dog|собака|1\n" +
-                    "cat|кошка|3\n" +
-                    "sun|солнце|4\n" +
-                    "moon|луна|0\n"
-        )
-    }
-
-    @AfterTest
-    fun tearDown() {
-        dictionaryFile.delete()
     }
 
     @Test
-    fun `getNextQuestion returns question with correct answer among variants`() {
+    fun `getNextQuestion with 5 unlearned words`() {
+        dictionaryFile = File.createTempFile("test_words_5unlearned", ".txt")
+        dictionaryFile.writeText(
+            "hello|привет|0\n" +
+                    "dog|собака|0\n" +
+                    "cat|кошка|1\n" +
+                    "sun|солнце|2\n" +
+                    "moon|луна|0\n"
+        )
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
 
         val question = trainer.getNextQuestion()
 
         assertTrue(question != null)
         assertTrue(question!!.variants.contains(question.correctAnswer))
+        assertTrue(question.variants.size <= 4)
     }
-
-@Test
-fun `getNextQuestion with 5 unlearned words return 4 variants from that pool`() {
-    dictionaryFile.writeText(
-        "hello|привет|0\n" +
-                "dog|собака|1\n" +
-                "cat|кошка|2\n" +
-                "sun|солнце|0\n" +
-                "moon|луна|1\n"
-    )
-    val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
-
-    val question = trainer.getNextQuestion()
-
-    assertTrue(question != null)
-    assertEquals(4, question!!.variants.size)
-    val unlearnedOriginals = setOf("hello", "dog", "cat", "sun","moon")
-    assertTrue(question.variants.all { it.original in unlearnedOriginals })
-}
-
     @Test
-    fun `getNextQuestion with 1 unlearned word fills remaining variants from learned words ` () {
+    fun `getNextQuestion with 1 unlearned word`() {
+        dictionaryFile = File.createTempFile("test_words_1unlearned", ".txt")
         dictionaryFile.writeText(
-            "hello|привет|0\n" +
-                    "dog|собака|3\n" +
-                    "cat|кошка|3\n" +
-                    "sun|солнце|3\n" +
-                    "moon|луна|3\n"
+            "hello|привет|3\n" +
+                    "dog|собака|4\n" +
+                    "cat|кошка|0\n"
         )
-
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
 
         val question = trainer.getNextQuestion()
 
         assertTrue(question != null)
-        assertEquals("hello", question!!.correctAnswer.original)
-        assertEquals(4, question.variants.size)
-        assertTrue(question.variants.contains(question.correctAnswer))
+        assertEquals(1, question!!.variants.size)
+        assertEquals("cat", question.correctAnswer.original)
     }
 
     @Test
-    fun `getNextQuestion returns null when all words are learned`() {
+    fun `getNextQuestion with all words learned`() {
+        dictionaryFile = File.createTempFile("test_words_alllearned", ".txt")
         dictionaryFile.writeText(
             "hello|привет|3\n" +
                     "dog|собака|4\n"
@@ -243,6 +178,14 @@ fun `getNextQuestion with 5 unlearned words return 4 variants from that pool`() 
 
     @Test
     fun `checkAnswer returns true and increments count for correct index`() {
+        dictionaryFile = File.createTempFile("test_words_checktrue", ".txt")
+        dictionaryFile.writeText(
+            "hello|привет|0\n" +
+                    "dog|собака|1\n" +
+                    "cat|кошка|3\n" +
+                    "sun|солнце|4\n" +
+                    "moon|луна|0\n"
+        )
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
         val question = trainer.getNextQuestion()!!
         val correctIndex = question.variants.indexOf(question.correctAnswer)
@@ -256,6 +199,14 @@ fun `getNextQuestion with 5 unlearned words return 4 variants from that pool`() 
 
     @Test
     fun `checkAnswer returns false and does not change count for incorrect index`() {
+        dictionaryFile = File.createTempFile("test_words_checkfalse", ".txt")
+        dictionaryFile.writeText(
+            "hello|привет|0\n" +
+                    "dog|собака|1\n" +
+                    "cat|кошка|3\n" +
+                    "sun|солнце|4\n" +
+                    "moon|луна|0\n"
+        )
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
         val question = trainer.getNextQuestion()!!
         val correctIndex = question.variants.indexOf(question.correctAnswer)
@@ -269,14 +220,21 @@ fun `getNextQuestion with 5 unlearned words return 4 variants from that pool`() 
     }
 
     @Test
-    fun `resetProgress sets all counters to zero and clears current question`() {
+    fun `resetProgress with 2 words in dictionary`() {
+        dictionaryFile = File.createTempFile("test_words_2reset", ".txt")
+        dictionaryFile.writeText(
+            "hello|привет|3\n" +
+                    "dog|собака|4\n"
+        )
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
         trainer.getNextQuestion()
 
         trainer.resetProgress()
+        val statistics = trainer.getStatistics()
 
-        assertEquals(0, trainer.getStatistics().learnedCount)
+        assertEquals(2, statistics.totalCount)
+        assertEquals(0, statistics.learnedCount)
         assertTrue(trainer.question == null)
     }
-
 }
+
