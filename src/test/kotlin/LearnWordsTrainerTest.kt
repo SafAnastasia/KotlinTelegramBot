@@ -149,9 +149,7 @@ class LearnWordsTrainerTest {
     fun `getNextQuestion with 1 unlearned word`() {
         dictionaryFile = File.createTempFile("test_words_1unlearned", ".txt")
         dictionaryFile.writeText(
-            "hello|привет|3\n" +
-                    "dog|собака|4\n" +
-                    "cat|кошка|0\n"
+            "cat|кошка|0\n"
         )
         val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
 
@@ -235,5 +233,29 @@ class LearnWordsTrainerTest {
         assertEquals(2, statistics.totalCount)
         assertEquals(0, statistics.learnedCount)
         assertTrue(trainer.question == null)
+    }
+
+    @Test
+    fun `getStatistics with empty dictionary`() {
+        dictionaryFile = File.createTempFile("test_words_empty", ".txt")
+        dictionaryFile.writeText("no separators here\n")
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+
+        val statistics = trainer.getStatistics()
+
+        assertEquals(0, statistics.totalCount)
+        assertEquals(0, statistics.learnedCount)
+        assertEquals(0, statistics.percent)
+    }
+
+    @Test
+    fun `getNextQuestion with empty dictionary`() {
+        dictionaryFile = File.createTempFile("test_words_empty2", ".txt")
+        dictionaryFile.writeText("completely invalid data\n")
+        val trainer = LearnWordsTrainer(dictionaryFile.absolutePath)
+
+        val question = trainer.getNextQuestion()
+
+        assertTrue(question == null)
     }
 }
