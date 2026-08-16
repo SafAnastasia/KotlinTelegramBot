@@ -106,6 +106,9 @@ class LearnWordsTrainer(private val fileName: String = "words.txt") {
         val questionWords = notLearnedList.shuffled()
             .take(minOf(ANSWER_OPTIONS, notLearnedList.size))
             .toMutableList()
+
+        val correctAnswer = questionWords.random()
+
         if (questionWords.size < ANSWER_OPTIONS) {
             val learnedList = dictionary.filter { it.correctAnswersCount >= CORRECT_ANSWERS }
             val need = ANSWER_OPTIONS - questionWords.size
@@ -115,7 +118,6 @@ class LearnWordsTrainer(private val fileName: String = "words.txt") {
             )
         }
 
-        val correctAnswer = questionWords.random()
         question = Question(
             variants = questionWords,
             correctAnswer = correctAnswer,
