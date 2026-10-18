@@ -195,4 +195,3 @@ class LearnWordsTrainer(private val fileName: String = "words.txt") {
         question = null
     }
 }
-
