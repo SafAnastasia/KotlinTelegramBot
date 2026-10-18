@@ -22,9 +22,19 @@ data class Update(
 @Serializable
 data class Message(
     val chat: Chat,
-    val text: String? = null
+    val text: String? = null,
+    val document: Document? = null
 )
 
+@Serializable
+data class Document(
+    @SerialName("file_id")
+    val fileId: String,
+    @SerialName("file_name")
+    val fileName: String? = null,
+    @SerialName("file_size")
+    val fileSize: Long? = null,
+)
 @Serializable
 data class Chat(
     val id: Long
@@ -50,7 +60,29 @@ data class SendMessageRequest(
     @SerialName("reply_markup")
     val replyMarkup: ReplyMarkup? = null
 )
-
+@Serializable
+data class GetFileRequest(
+    @SerialName("file_id")
+    val fileId: String,
+)
+@Serializable
+data class GetFileResponse(
+    @SerialName("ok")
+    val ok: Boolean,
+    @SerialName("result")
+    val result: TelegramFile? = null,
+)
+@Serializable
+data class TelegramFile(
+    @SerialName("file_id")
+    val fileId: String,
+    @SerialName("file_unique_id")
+    val fileUniqueId: String,
+    @SerialName("file_size")
+    val fileSize: Long,
+    @SerialName("file_path")
+    val filePath: String,
+)
 @Serializable
 data class ReplyMarkup(
     @SerialName("inline_keyboard")
