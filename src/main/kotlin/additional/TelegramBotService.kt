@@ -1,5 +1,7 @@
 package org.example.additional
 
+import java.io.File
+import java.io.InputStream
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -18,6 +20,9 @@ class TelegramBotService(private val botToken: String) {
         const val LEARN_WORDS_CLICKED = "learn_words"
         const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
         const val RESET_CLICKED = "reset_progress"
+
+        const val BOT_URL = "https://api.telegram.org/bot"
+        const val BOT_FILE_URL = "https://api.telegram.org/file/bot"
     }
 
     fun getUpdates(offset: Long): List<Update> {
@@ -94,6 +99,36 @@ class TelegramBotService(private val botToken: String) {
             )
         )
         sendRequest(requestBody)
+    }
+    fun getFile(fileId: String, json: Json): String {
+        val urlGetFile = "$BOT_FILE_URL?file_id=$fileId"
+        val requestBody = GetFileRequest(fileId = fileId)
+        val requestBodyString = json.encodeToString(requestBody)
+        val client = HttpClient.newBuilder().build()
+        val request: HttpRequest = HttpRequest.newBuilder()
+            .uri(URI.create(urlGetFile))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
+            .build()
+        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        return response.body()
+    }
+
+    fun downloadFile(filePath: String, fileName: String) {
+        val urlGetFile = "$BOT_URL$botToken/getFile"
+        println(urlGetFile)
+        val request = HttpRequest
+            .newBuilder()
+            .uri(URI.create(urlGetFile))
+            .GET()
+            .build()
+        val response: HttpResponse<InputStream> = HttpClient
+            .newHttpClient()
+            .send(request, HttpResponse.BodyHandlers.ofInputStream())
+
+        println("status code" + response.statusCode())
+        val body: InputStream = response.body()
+        body.copyTo(File(fileName).outputStream(), 16 * 1024)
     }
 }
 

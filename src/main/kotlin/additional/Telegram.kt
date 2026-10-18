@@ -1,5 +1,7 @@
 package org.example.additional
 
+import kotlinx.serialization.json.Json
+
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
         println("Ошибка: передайте токен бота как аргумент!")
@@ -9,6 +11,7 @@ fun main(args: Array<String>) {
     val botToken = args[0]
     val telegramBotService = TelegramBotService(botToken)
     val trainer = mutableMapOf<Long, LearnWordsTrainer>()
+    val json = Json { ignoreUnknownKeys = true }
 
     var offset: Long = 0L
 
@@ -21,6 +24,7 @@ fun main(args: Array<String>) {
 
                 val chatId = update.message?.chat?.id
                 val messageText = update.message?.text
+                val document = update.message?.document
                 val callbackChatId = update.callbackQuery?.from?.id
                 val callbackData = update.callbackQuery?.data
 
@@ -28,6 +32,14 @@ fun main(args: Array<String>) {
 
                 val trainer = trainer.getOrPut(userId) { LearnWordsTrainer("$userId.txt") }
 
+                if (document != null) {
+                    val jsonResponse = telegramBotService.getFile(document.fileId, json)
+                    println(jsonResponse)
+                    val response: GetFileResponse = json.decodeFromString(jsonResponse)
+                    response.result?.let {
+                        telegramBotService.downloadFile(it.filePath, it.fileUniqueId)
+                    }
+                }
                 if (chatId != null) {
                     when (messageText) {
                         "/start" -> telegramBotService.sendMenu(chatId)
@@ -93,4 +105,5 @@ fun checkNextQuestionAndSend(
     } else {
         telegramBotService.sendQuestion(chatId, question)
     }
+}
 }
