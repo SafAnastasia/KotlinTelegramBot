@@ -73,22 +73,28 @@ class TelegramBotService(private val botToken: String) {
     fun sendMenu(chatId: Long) {
         val requestBody = json.encodeToString(
             SendMessageRequest(
-            chatId = chatId,
-            text = "Основное меню",
-            replyMarkup = ReplyMarkup(
-                inlineKeyboard = listOf(
-                    listOf(InlineKeyboardButton(
-                            text = "Учить слова",
-                            callbackData = LEARN_WORDS_CLICKED
-                        )),
-                    listOf(InlineKeyboardButton(
-                            text = "Статистика",
-                            callbackData = STATISTICS_CLICKED
-                        )),
-                    listOf(InlineKeyboardButton(
-                        text = "Сбросить прогресс",
-                        callbackData = RESET_CLICKED
-                    ))
+                chatId = chatId,
+                text = "Основное меню",
+                replyMarkup = ReplyMarkup(
+                    inlineKeyboard = listOf(
+                        listOf(
+                            InlineKeyboardButton(
+                                text = "Учить слова",
+                                callbackData = LEARN_WORDS_CLICKED
+                            )
+                        ),
+                        listOf(
+                            InlineKeyboardButton(
+                                text = "Статистика",
+                                callbackData = STATISTICS_CLICKED
+                            )
+                        ),
+                        listOf(
+                            InlineKeyboardButton(
+                                text = "Сбросить прогресс",
+                                callbackData = RESET_CLICKED
+                            )
+                        )
                     )
                 )
             )
